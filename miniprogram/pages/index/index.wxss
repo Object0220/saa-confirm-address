@@ -574,6 +574,11 @@ page {
   font-weight: 600;
 }
 
+.stop-label .modified-tag.confirmed {
+  color: #065F46;
+  background: #D1FAE5;
+}
+
 .stop-address {
   font-size: 14px;
   font-weight: 500;
@@ -709,6 +714,19 @@ page {
 
 .btn-confirm.loading {
   opacity: 0.8;
+}
+
+.btn-done {
+  width: 100%;
+  height: 48px;
+  line-height: 48px;
+  text-align: center;
+  background: #D1FAE5;
+  color: #065F46;
+  font-size: 15px;
+  font-weight: 600;
+  border-radius: 12px;
+  letter-spacing: 1px;
 }
 
 /* =============================== */

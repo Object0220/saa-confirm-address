@@ -43,6 +43,7 @@ Page({
     verifying: false,
 
     showSuccess: false,
+    confirmed: false,
     confirming: false,
 
     // 状态栏高度
@@ -421,7 +422,7 @@ Page({
         throw new Error(res.message)
       })
       .then(() => {
-        this.setData({ confirming: false, showSuccess: true })
+        this.setData({ confirming: false, showSuccess: true, confirmed: true })
       })
       .catch(err => {
         this.setData({ confirming: false })

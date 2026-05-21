@@ -147,7 +147,7 @@
           <view class="stop-content">
             <view class="stop-label">
               <text>修改后的救援地地址</text>
-              <view class="modified-tag" wx:if="{{modifiedAddress}}">已修改</view>
+              <view class="modified-tag {{confirmed ? 'confirmed' : ''}}" wx:if="{{modifiedAddress}}">{{confirmed ? '已确认' : '已修改'}}</view>
             </view>
             <text class="stop-address {{modifiedAddress ? '' : 'placeholder'}}" wx:if="{{modifiedAddress}}">{{modifiedAddress}}</text>
             <text class="stop-address placeholder" wx:else>请选择救援地址</text>
@@ -164,11 +164,17 @@
         <text>修改救援地地址</text>
       </view>
 
-      <view wx:if="{{modifiedAddress}}" class="btn-group">
+      <!-- 已修改但未确认 -->
+      <view wx:elif="{{modifiedAddress && !confirmed}}" class="btn-group">
         <view class="btn-reset" bind:tap="onResetAddress">撤销</view>
         <view class="btn-confirm {{confirming ? 'loading' : ''}}" bind:tap="onConfirmAddress">
           {{confirming ? '修改中...' : '确认修改'}}
         </view>
+      </view>
+
+      <!-- 已确认提交 -->
+      <view wx:elif="{{confirmed}}" class="btn-done">
+        <text>✓ 已通知司机</text>
       </view>
     </view>
 
