@@ -1,0 +1,4 @@
+node_modules/
+typings/types/wx/
+*.log
+.DS_Store

@@ -1,0 +1,198 @@
+<!-- 自定义导航栏 -->
+<view class="navbar {{navClass}}">
+  <view class="navbar-inner" style="padding-top: {{statusBarHeight}}px;">
+    <view class="navbar-title-center">修改救援地址</view>
+  </view>
+</view>
+
+<!-- =========================== -->
+<!-- 加载状态 -->
+<!-- =========================== -->
+<view class="page-loading {{pageStatus === 'loading' ? 'active' : ''}}">
+  <view class="loading-spinner"></view>
+  <view class="loading-text">正在加载订单信息...</view>
+</view>
+
+<!-- =========================== -->
+<!-- 错误状态 -->
+<!-- =========================== -->
+<view class="page-error {{pageStatus === 'error' ? 'active' : ''}}">
+  <view class="error-icon">
+    <image src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 24 24' fill='none'%3E%3Ccircle cx='12' cy='12' r='10' stroke='%23EF4444' stroke-width='1.5'/%3E%3Cpath d='M12 8V12' stroke='%23EF4444' stroke-width='2' stroke-linecap='round'/%3E%3Ccircle cx='12' cy='16' r='1' fill='%23EF4444'/%3E%3C/svg%3E" style="width:64px;height:64px;" />
+  </view>
+  <view class="error-title">{{errorMessage}}</view>
+  <view class="error-desc">请检查订单号是否正确，或联系客服</view>
+  <view class="error-btn" bind:tap="onRetry">重新加载</view>
+  <view class="error-contact" bind:tap="onCallService">联系客服</view>
+</view>
+
+<!-- =========================== -->
+<!-- =========================== -->
+<!-- 验证页面 -->
+<!-- =========================== -->
+<view class="page-verify {{pageStatus === 'verify' ? 'active' : ''}}">
+  <view class="verify-card">
+    <view class="verify-icon">
+      <image src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 24 24' fill='none'%3E%3Crect x='3' y='7' width='18' height='14' rx='2' stroke='%232563EB' stroke-width='1.5'/%3E%3Cpath d='M8 7V5C8 3 10 2 12 2C14 2 16 3 16 5V7' stroke='%232563EB' stroke-width='1.5' stroke-linecap='round'/%3E%3Ccircle cx='15' cy='14' r='1.5' fill='%232563EB'/%3E%3Ccircle cx='12' cy='14' r='1.5' fill='%232563EB'/%3E%3Ccircle cx='9' cy='14' r='1.5' fill='%232563EB'/%3E%3C/svg%3E" style="width:40px;height:40px;" />
+    </view>
+    <view class="verify-title">身份验证</view>
+    <view class="verify-desc">请输入手机号后4位以确认身份</view>
+
+    <view class="code-box">
+      <view class="code-slots">
+        <view wx:for="{{codeInput}}" wx:key="index" class="code-slot-wrap {{item ? 'filled' : ''}} {{focusedIndex === index ? 'active' : ''}}">
+          <input class="code-slot-inp" type="number" maxlength="1" value="{{item}}" data-index="{{index}}" bindinput="onDigitInput" focus="{{focusedIndex === index}}" />
+          <text class="code-slot-txt">{{item}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="verify-phone">
+      <image src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M22 16.92V19C22.0001 20.31 21.0001 21.42 19.7 21.49C18.5544 21.55 17.4114 21.44 16.3 21.16C14.7226 20.76 13.2287 20.08 11.88 19.16M11.88 19.16C10.5622 18.25 9.38697 17.14 8.4 15.87C7.5 14.58 6.83 13.14 6.41 11.61C6.1413 10.51 6.03299 9.37621 6.09 8.25C6.15 6.97 7.23 6 8.5 6H11.08C11.59 6 12.04 6.33 12.19 6.82L13.21 10.09C13.3444 10.53 13.2058 11.01 12.86 11.31L11.09 12.87C11.9283 14.3112 13.1068 15.5062 14.51 16.35L16.29 14.68C16.6 14.38 17.09 14.25 17.53 14.38L20.57 15.32C21.07 15.47 21.4 15.92 21.4 16.43L21.4 16.92C22 16.92 22 16.92 22 16.92Z' stroke='%239CA3AF' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E" style="width:12px;height:12px;" />
+      <text>{{phoneMask}}</text>
+    </view>
+
+    <view class="verify-error" wx:if="{{verifyError}}">
+      <image src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none'%3E%3Ccircle cx='12' cy='12' r='10' fill='%23EF4444'/%3E%3Cpath d='M12 8V12' stroke='white' stroke-width='2' stroke-linecap='round'/%3E%3Ccircle cx='12' cy='16' r='1' fill='white'/%3E%3C/svg%3E" style="width:14px;height:14px;" />
+      <text>{{verifyError}}</text>
+    </view>
+
+    <view class="verify-btn {{verifying ? 'loading' : ''}}" bind:tap="onSubmitVerify">
+      {{verifying ? '验证中...' : '验证'}}
+    </view>
+  </view>
+</view>
+
+<!-- =========================== -->
+<!-- 主内容（数据加载完毕） -->
+<!-- =========================== -->
+<view class="page-main {{pageStatus === 'loaded' || pageStatus === 'verify' ? 'active' : ''}}">
+
+  <!-- 地图背景 -->
+  <map
+    id="map"
+    class="map-bg"
+    latitude="{{mapCenter.latitude}}"
+    longitude="{{mapCenter.longitude}}"
+    scale="{{mapScale}}"
+    markers="{{markers}}"
+    polyline="{{polylines}}"
+    show-compass="{{false}}"
+    enable-scroll="{{true}}"
+    enable-zoom="{{true}}"
+    enable-rotate="{{false}}"    
+    enable-overlooking="{{false}}"
+    bind:markertap="onMarkerTap"
+  />
+
+  <!-- 透明遮罩，让底部卡片更清晰 -->
+  <view class="map-fade"></view>
+
+  <!-- =========================== -->
+  <!-- 底部面板 -->
+  <!-- =========================== -->
+  <view class="bottom-panel safe-area-bottom">
+
+    <!-- 拖拽指示条 -->
+    <view class="panel-bar"></view>
+
+    <!-- ========= 订单概要 ========= -->
+    <view class="panel-section order-summary">
+      <view class="summary-left">
+        <view class="service-badge">{{orderInfo.serviceType}}</view>
+        <text class="plate-number">{{orderInfo.plateNumber}}</text>
+      </view>
+      <view class="summary-right">
+        <view class="status-tag {{orderInfo.status}}">{{orderInfo.statusText}}</view>
+      </view>
+    </view>
+
+    <!-- ========= 订单信息 ========= -->
+    <view class="meta-bar">
+      <view class="meta-item">
+        <text class="meta-label">技师</text>
+        <text class="meta-value">{{orderInfo.driverName}}</text>
+        <text class="meta-divider">|</text>
+        <text class="meta-phone">{{orderInfo.driverPhone}}</text>
+      </view>
+      <view class="meta-item">
+        <text class="meta-label">车型</text>
+        <text class="meta-value">{{orderInfo.vehicleModel}}</text>
+      </view>
+    </view>
+
+    <!-- ========= 路线卡片 (from → to) ========= -->
+    <view class="route-card">
+
+      <view class="route-stops">
+        <!-- 虚线连接线 -->
+        <view class="route-line"></view>
+
+        <!-- 救援地 -->
+        <view class="route-stop">
+          <view class="stop-marker">
+            <view class="stop-dot blue"></view>
+          </view>
+          <view class="stop-content">
+            <view class="stop-label">救援地</view>
+            <text class="stop-address">{{orderInfo.currentAddress}}</text>
+          </view>
+        </view>
+
+        <!-- 修改后的救援地地址 -->
+        <view class="route-stop">
+          <view class="stop-marker">
+            <view class="stop-dot green"></view>
+          </view>
+          <view class="stop-content">
+            <view class="stop-label">
+              <text>修改后的救援地地址</text>
+              <view class="modified-tag" wx:if="{{modifiedAddress}}">已修改</view>
+            </view>
+            <text class="stop-address {{modifiedAddress ? '' : 'placeholder'}}" wx:if="{{modifiedAddress}}">{{modifiedAddress}}</text>
+            <text class="stop-address placeholder" wx:else>请选择救援地址</text>
+            <text class="stop-distance" wx:if="{{modifiedDistance}}">距原地址约 {{modifiedDistance}} 公里</text>
+          </view>
+        </view>
+      </view>
+
+    </view>
+
+    <!-- ========= 底部操作 ========= -->
+    <view class="panel-actions">
+      <view wx:if="{{!modifiedAddress}}" class="btn-modify" bind:tap="onModifyAddress">
+        <text>修改救援地地址</text>
+      </view>
+
+      <view wx:if="{{modifiedAddress}}" class="btn-group">
+        <view class="btn-reset" bind:tap="onResetAddress">撤销</view>
+        <view class="btn-confirm {{confirming ? 'loading' : ''}}" bind:tap="onConfirmAddress">
+          {{confirming ? '修改中...' : '确认修改'}}
+        </view>
+      </view>
+    </view>
+
+  </view>
+</view>
+
+<!-- =========================== -->
+<!-- 成功弹窗 -->
+<!-- =========================== -->
+<view class="success-overlay {{showSuccess ? 'active' : ''}}" catch:tap="preventTap">
+  <view class="success-dialog">
+    <view class="success-icon-wrap">
+      <view class="success-icon">
+        <image src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 24 24' fill='none'%3E%3Ccircle cx='12' cy='12' r='10' fill='%2310B981'/%3E%3Cpath d='M8 12L11 15L16 9' stroke='white' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" style="width:56px;height:56px;" />
+      </view>
+    </view>
+    <view class="success-title">救援地已更新</view>
+    <view class="success-desc">司机已收到新的救援地地址</view>
+    <view class="success-address-card">
+      <view class="success-address-icon">
+        <image src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none'%3E%3Ccircle cx='12' cy='12' r='4' fill='%2310B981'/%3E%3Ccircle cx='12' cy='12' r='8' stroke='%2310B981' stroke-width='1.5'/%3E%3C/svg%3E" style="width:16px;height:16px;" />
+      </view>
+      <text class="success-address-text">{{modifiedAddress}}</text>
+    </view>
+    <view class="success-btn" bind:tap="onCloseSuccess">知道了</view>
+  </view>
+</view>
