@@ -141,13 +141,13 @@ Page({
         this.updateMarkers()
         this.centerMap()
 
-        // 加载完成 → 跳转验证
+        // 加载完成 → 跳转验证（focusedIndex: -1 避免一打开就弹出键盘）
         setTimeout(() => {
           this.setData({
             pageStatus: 'verify',
             codeInput: ['', '', '', ''],
             codeIndex: 0,
-            focusedIndex: 0,
+            focusedIndex: -1,
             verifyError: '',
           })
         }, 200)
@@ -293,9 +293,12 @@ Page({
       verifyError: '',
     })
 
-    // 输满4位自动验证
+    // 输满4位自动验证并收起键盘
     if (digit && idx === 3) {
-      setTimeout(() => this.onSubmitVerify(), 300)
+      setTimeout(() => {
+        wx.hideKeyboard()
+        this.onSubmitVerify()
+      }, 300)
     }
   },
 
@@ -317,7 +320,7 @@ Page({
           verifying: false,
           codeInput: ['', '', '', ''],
           codeIndex: 0,
-          focusedIndex: 0,
+          focusedIndex: -1,
         })
       }
     }).catch(() => {
