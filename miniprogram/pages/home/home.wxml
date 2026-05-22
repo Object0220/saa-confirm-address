@@ -139,27 +139,8 @@
           </view>
         </view>
 
-        <!-- 目的地 -->
-        <view class="route-stop">
-          <view class="stop-marker">
-            <view class="stop-dot" style="background:#8B5CF6;"></view>
-          </view>
-          <view class="stop-content">
-            <view class="stop-label">
-              <text>目的地</text>
-              <view class="modified-tag {{confirmed ? 'confirmed' : ''}}" wx:if="{{modifiedDestAddress}}">{{confirmed ? '已确认' : '已修改'}}</view>
-            </view>
-            <text class="stop-address">{{modifiedDestAddress || orderInfo.destAddress}}</text>
-            <!-- 修改目的地按钮（未确认时可点） -->
-            <view wx:if="{{!confirmed}}" class="dest-modify-btn" bind:tap="onModifyDestination">
-              <text wx:if="{{!modifiedDestAddress}}">修改目的地地址</text>
-              <text wx:else>重新选择目的地</text>
-            </view>
-          </view>
-        </view>
-
         <!-- 修改后的救援地地址 -->
-        <view class="route-stop" wx:if="{{modifiedAddress || confirmed}}">
+        <view class="route-stop">
           <view class="stop-marker">
             <view class="stop-dot green"></view>
           </view>
@@ -170,7 +151,7 @@
             </view>
             <text class="stop-address {{modifiedAddress ? '' : 'placeholder'}}" wx:if="{{modifiedAddress}}">{{modifiedAddress}}</text>
             <text class="stop-address placeholder" wx:else>请选择救援地址</text>
-            <text class="stop-distance" wx:if="{{modifiedDistance}}">距目的地约 {{modifiedDistance}} 公里</text>
+            <text class="stop-distance" wx:if="{{modifiedDistance}}">距原地址约 {{modifiedDistance}} 公里</text>
           </view>
         </view>
       </view>
@@ -179,19 +160,15 @@
 
     <!-- ========= 底部操作 ========= -->
     <view class="panel-actions">
-      <!-- 未确认时：修改救援地 + 确认/撤销 -->
-      <view wx:if="{{!confirmed}}">
-        <!-- 修改救援地按钮 -->
-        <view wx:if="{{!modifiedAddress}}" class="btn-modify" bind:tap="onModifyAddress">
-          <text>修改救援地地址</text>
-        </view>
+      <view wx:if="{{!modifiedAddress}}" class="btn-modify" bind:tap="onModifyAddress">
+        <text>修改救援地地址</text>
+      </view>
 
-        <!-- 已修改救援地但未确认 - 显示撤销/确认 -->
-        <view wx:if="{{modifiedAddress || modifiedDestAddress}}" class="btn-group" style="margin-top:12px;">
-          <view class="btn-reset" bind:tap="onResetAddress">撤销</view>
-          <view class="btn-confirm {{confirming ? 'loading' : ''}}" bind:tap="onConfirmAddress">
-            {{confirming ? '修改中...' : '确认修改'}}
-          </view>
+      <!-- 已修改但未确认 -->
+      <view wx:elif="{{modifiedAddress && !confirmed}}" class="btn-group">
+        <view class="btn-reset" bind:tap="onResetAddress">撤销</view>
+        <view class="btn-confirm {{confirming ? 'loading' : ''}}" bind:tap="onConfirmAddress">
+          {{confirming ? '修改中...' : '确认修改'}}
         </view>
       </view>
 
@@ -214,14 +191,13 @@
         <image src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 24 24' fill='none'%3E%3Ccircle cx='12' cy='12' r='10' fill='%2310B981'/%3E%3Cpath d='M8 12L11 15L16 9' stroke='white' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" style="width:56px;height:56px;" />
       </view>
     </view>
-    <view class="success-title">地址已更新</view>
-    <view class="success-desc">司机已收到新的地址信息</view>
+    <view class="success-title">救援地已更新</view>
+    <view class="success-desc">司机已收到新的救援地地址</view>
     <view class="success-address-card">
-      <view class="success-address-text">
-        <text wx:if="{{modifiedAddress}}">救援地：{{modifiedAddress}}</text>
-        <text wx:if="{{modifiedDestAddress}}">
-目的地：{{modifiedDestAddress}}</text>
+      <view class="success-address-icon">
+        <image src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none'%3E%3Ccircle cx='12' cy='12' r='4' fill='%2310B981'/%3E%3Ccircle cx='12' cy='12' r='8' stroke='%2310B981' stroke-width='1.5'/%3E%3C/svg%3E" style="width:16px;height:16px;" />
       </view>
+      <text class="success-address-text">{{modifiedAddress}}</text>
     </view>
     <view class="success-btn" bind:tap="onCloseSuccess">知道了</view>
   </view>
