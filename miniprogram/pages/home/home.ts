@@ -89,11 +89,17 @@ Page({
     // 司机当前位置
     driverLocation: DRIVER_LOCATION,
 
-    // 修改后的地址
+    // 修改后的救援地地址
     modifiedAddress: '',
     modifiedLatitude: 0,
     modifiedLongitude: 0,
     modifiedDistance: '',
+
+    // 修改后的目的地地址
+    modifiedDestAddress: '',
+    modifiedDestLatitude: 0,
+    modifiedDestLongitude: 0,
+    destModified: false,
   },
 
   // ===========================
@@ -146,6 +152,10 @@ Page({
           modifiedLatitude: 0,
           modifiedLongitude: 0,
           modifiedDistance: '',
+          modifiedDestAddress: '',
+          modifiedDestLatitude: 0,
+          modifiedDestLongitude: 0,
+          destModified: false,
         })
 
         this.updateMarkers()
@@ -185,7 +195,7 @@ Page({
   // ===========================
 
   updateMarkers() {
-    const { orderInfo, driverLocation, modifiedAddress, modifiedLatitude, modifiedLongitude } = this.data
+    const { orderInfo, driverLocation, modifiedAddress, modifiedLatitude, modifiedLongitude, modifiedDestAddress, modifiedDestLatitude, modifiedDestLongitude } = this.data
     const markers: MapMarker[] = []
     const polylinePoints: LatLng[] = []
 
@@ -209,7 +219,7 @@ Page({
       },
     })
 
-    // 1. 救援地（蓝色圆点 + 蓝色 callout）
+    // 1. 救援地（蓝色）
     markers.push({
       id: 0,
       latitude: orderInfo.currentLatitude,
@@ -233,7 +243,34 @@ Page({
       longitude: orderInfo.currentLongitude,
     })
 
-    // 2. 修改后的救援地地址（仅修改后才显示）
+    // 2. 目的地（紫色）
+    const destLat = modifiedDestAddress ? modifiedDestLatitude : orderInfo.destLatitude
+    const destLng = modifiedDestAddress ? modifiedDestLongitude : orderInfo.destLongitude
+    const destAddr = modifiedDestAddress || orderInfo.destAddress
+    markers.push({
+      id: 2,
+      latitude: destLat,
+      longitude: destLng,
+      title: '目的地',
+      width: 32,
+      height: 40,
+      iconPath: '/images/marker-purple.svg',
+      callout: {
+        content: destAddr,
+        color: '#6D28D9',
+        fontSize: 12,
+        borderRadius: 8,
+        bgColor: '#EDE9FE',
+        padding: 8,
+        display: 'ALWAYS',
+      },
+    })
+    polylinePoints.push({
+      latitude: destLat,
+      longitude: destLng,
+    })
+
+    // 3. 修改后的救援地地址（仅修改后才显示绿色）
     if (modifiedAddress) {
       markers.push({
         id: 1,
@@ -260,14 +297,14 @@ Page({
 
       const distance = this.calcDistance(
         modifiedLatitude, modifiedLongitude,
-        orderInfo.destLatitude, orderInfo.destLongitude,
+        destLat, destLng,
       )
       this.setData({
         modifiedDistance: distance < 1 ? '不到1' : distance.toFixed(1),
       })
     }
 
-    // 路线连线
+    // 路线连线（至少2个点才画线）
     const polylines = polylinePoints.length > 1 ? [{
       points: polylinePoints,
       color: '#10B981',
@@ -281,7 +318,7 @@ Page({
   },
 
   centerMap() {
-    const { orderInfo, driverLocation, modifiedLatitude, modifiedLongitude } = this.data
+    const { orderInfo, driverLocation, modifiedLatitude, modifiedLongitude, modifiedDestAddress, modifiedDestLatitude, modifiedDestLongitude } = this.data
     const ctx = wx.createMapContext('map', this)
     const pts: LatLng[] = [
       { latitude: orderInfo.currentLatitude, longitude: orderInfo.currentLongitude },
@@ -289,6 +326,11 @@ Page({
     ]
     if (modifiedLatitude && modifiedLongitude) {
       pts.push({ latitude: modifiedLatitude, longitude: modifiedLongitude })
+    }
+    const destLat = modifiedDestAddress ? modifiedDestLatitude : orderInfo.destLatitude
+    const destLng = modifiedDestAddress ? modifiedDestLongitude : orderInfo.destLongitude
+    if (destLat && destLng) {
+      pts.push({ latitude: destLat, longitude: destLng })
     }
     ctx.includePoints({ points: pts, padding: [120, 50, 60, 50] })
   },
@@ -369,7 +411,7 @@ Page({
     console.log('marker tapped', e)
   },
 
-  /** 修改目的地 */
+  /** 修改救援地地址 */
   onModifyAddress() {
     // 请求定位权限
     wx.authorize({
@@ -393,7 +435,7 @@ Page({
     })
   },
 
-  /** 打开位置选择器 */
+  /** 打开位置选择器 - 修改救援地 */
   chooseLocation() {
     wx.chooseLocation({
       success: (res: WechatMiniprogram.ChooseLocationSuccessCallbackResult) => {
@@ -424,7 +466,7 @@ Page({
   onResetAddress() {
     wx.showModal({
       title: '撤销修改',
-      content: '确认恢复到原来的目的地地址？',
+      content: '确认恢复到原来的地址？',
       confirmText: '恢复',
       success: (res) => {
         if (res.confirm) {
@@ -433,6 +475,10 @@ Page({
             modifiedLatitude: 0,
             modifiedLongitude: 0,
             modifiedDistance: '',
+            modifiedDestAddress: '',
+            modifiedDestLatitude: 0,
+            modifiedDestLongitude: 0,
+            destModified: false,
           })
           this.updateMarkers()
           this.centerMap()
@@ -441,21 +487,88 @@ Page({
     })
   },
 
-  /** 确认修改目的地 */
+  /** 修改目的地地址 */
+  onModifyDestination() {
+    wx.authorize({
+      scope: 'scope.userLocation',
+      success: () => {
+        this.chooseDestLocation()
+      },
+      fail: () => {
+        wx.showModal({
+          title: '需要位置权限',
+          content: '修改目的地需要获取您的位置信息，请在设置中开启',
+          confirmText: '去设置',
+          success: (res) => {
+            if (res.confirm) {
+              wx.openSetting()
+            }
+          },
+        })
+      },
+    })
+  },
+
+  /** 打开位置选择器 - 修改目的地 */
+  chooseDestLocation() {
+    wx.chooseLocation({
+      success: (res: WechatMiniprogram.ChooseLocationSuccessCallbackResult) => {
+        if (res.name || res.address) {
+          const address = res.name || res.address
+          this.setData({
+            modifiedDestAddress: address,
+            modifiedDestLatitude: Number(res.latitude),
+            modifiedDestLongitude: Number(res.longitude),
+            destModified: true,
+          })
+          this.updateMarkers()
+          this.centerMap()
+
+          wx.showToast({
+            title: '目的地已选，点击确认修改',
+            icon: 'none',
+            duration: 2000,
+          })
+        }
+      },
+      fail: (err) => {
+        console.log('用户取消选择位置', err)
+      },
+    })
+  },
+
+  /** 确认所有修改 */
   onConfirmAddress() {
     if (this.data.confirming) return
     this.setData({ confirming: true })
 
-    const { orderInfo, modifiedAddress, modifiedLatitude, modifiedLongitude } = this.data
+    const { orderInfo, modifiedAddress, modifiedLatitude, modifiedLongitude, modifiedDestAddress, modifiedDestLatitude, modifiedDestLongitude } = this.data
+    const hasRescueMod = !!modifiedAddress
+    const hasDestMod = !!modifiedDestAddress
 
-    // 调接口更新目的地
-    updateDestination(orderInfo.orderId, modifiedAddress, modifiedLatitude, modifiedLongitude)
-      .then(res => {
-        if (res.code === 0) {
-          // 发送确认短信
-          return sendConfirmSMS(orderInfo.orderId, modifiedAddress)
+    // 收集所有修改
+    const tasks: Promise<any>[] = []
+
+    if (hasRescueMod) {
+      tasks.push(
+        updateDestination(orderInfo.orderId, modifiedAddress, modifiedLatitude, modifiedLongitude)
+      )
+    }
+    if (hasDestMod) {
+      tasks.push(
+        updateDestination(orderInfo.orderId, modifiedDestAddress, modifiedDestLatitude, modifiedDestLongitude)
+      )
+    }
+
+    Promise.all(tasks)
+      .then(() => {
+        if (hasRescueMod || hasDestMod) {
+          const smsAddr = [
+            hasRescueMod ? `救援地：${modifiedAddress}` : '',
+            hasDestMod ? `目的地：${modifiedDestAddress}` : '',
+          ].filter(Boolean).join('\n')
+          return sendConfirmSMS(orderInfo.orderId, smsAddr)
         }
-        throw new Error(res.message)
       })
       .then(() => {
         this.setData({ confirming: false, showSuccess: true, confirmed: true })

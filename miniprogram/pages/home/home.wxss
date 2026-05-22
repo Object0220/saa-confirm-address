@@ -598,6 +598,25 @@ page {
   margin-top: 1px;
 }
 
+/* 修改目的地按钮 */
+.dest-modify-btn {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 5px;
+  padding: 4px 12px;
+  background: #EDE9FE;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #6D28D9;
+  transition: all 0.15s ease;
+}
+
+.dest-modify-btn:active {
+  background: #DDD6FE;
+  transform: scale(0.97);
+}
+
 
 
 /* =============================== */
