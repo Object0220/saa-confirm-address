@@ -28,6 +28,13 @@ interface LatLng {
   longitude: number
 }
 
+// 司机当前位置（写死：福州闽侯县创新园）
+const DRIVER_LOCATION = {
+  latitude: 26.0655,
+  longitude: 119.1928,
+  address: '福州闽侯县创新园',
+}
+
 Page({
   data: {
     // 页面状态
@@ -78,6 +85,9 @@ Page({
       driverPlate: '',
       createdAt: '',
     } as OrderInfo,
+
+    // 司机当前位置
+    driverLocation: DRIVER_LOCATION,
 
     // 修改后的地址
     modifiedAddress: '',
@@ -175,9 +185,29 @@ Page({
   // ===========================
 
   updateMarkers() {
-    const { orderInfo, modifiedAddress, modifiedLatitude, modifiedLongitude } = this.data
+    const { orderInfo, driverLocation, modifiedAddress, modifiedLatitude, modifiedLongitude } = this.data
     const markers: MapMarker[] = []
     const polylinePoints: LatLng[] = []
+
+    // 0. 司机当前位置（橙色）
+    markers.push({
+      id: -1,
+      latitude: driverLocation.latitude,
+      longitude: driverLocation.longitude,
+      title: '司机位置',
+      width: 36,
+      height: 44,
+      iconPath: '/images/marker-orange.svg',
+      callout: {
+        content: `📍 ${driverLocation.address}`,
+        color: '#92400E',
+        fontSize: 12,
+        borderRadius: 8,
+        bgColor: '#FEF3C7',
+        padding: 8,
+        display: 'ALWAYS',
+      },
+    })
 
     // 1. 救援地（蓝色圆点 + 蓝色 callout）
     markers.push({
@@ -251,13 +281,16 @@ Page({
   },
 
   centerMap() {
-    const { orderInfo, modifiedLatitude, modifiedLongitude } = this.data
+    const { orderInfo, driverLocation, modifiedLatitude, modifiedLongitude } = this.data
     const ctx = wx.createMapContext('map', this)
-    const pts: LatLng[] = [{ latitude: orderInfo.currentLatitude, longitude: orderInfo.currentLongitude }]
+    const pts: LatLng[] = [
+      { latitude: orderInfo.currentLatitude, longitude: orderInfo.currentLongitude },
+      { latitude: driverLocation.latitude, longitude: driverLocation.longitude },
+    ]
     if (modifiedLatitude && modifiedLongitude) {
       pts.push({ latitude: modifiedLatitude, longitude: modifiedLongitude })
     }
-    ctx.includePoints({ points: pts, padding: [80, 50, 300, 50] })
+    ctx.includePoints({ points: pts, padding: [120, 50, 60, 50] })
   },
 
   /** 计算两点间距离（km），使用 Haversine 公式 */
