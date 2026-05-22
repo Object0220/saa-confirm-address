@@ -51,7 +51,7 @@ const MOCK_ORDERS: Record<string, OrderInfo> = {
     driverPhone: '138****8888',
     driverPlate: '京B·T8888',
     customerPhone: '13812348888',
-    customerPhoneMask: '138********',
+    customerPhoneMask: '',
     createdAt: '2026-05-21 22:30',
   },
   'DEMO456': {
